@@ -4,3 +4,7 @@
 * Mofified by Kenji Rikitake, JJ1BDX
 * See <https://github.com/HarrydeBug/WSPR-transmitters> for the latest original source code
 
+## License
+
+GPLv3
+
