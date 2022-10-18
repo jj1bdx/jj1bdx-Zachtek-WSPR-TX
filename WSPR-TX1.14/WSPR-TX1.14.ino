@@ -2,8 +2,7 @@
 // Mofified by Kenji Rikitake, JJ1BDX
 // See https://github.com/HarrydeBug/WSPR-transmitters
 // for the latest original source code
-
-#include <NMEAGPS.h>
+// Compiled for WSPR-TX Model 1012 MidPlus / HW Version 1.16
 
  /*
   Software for Zachtek WSPR Transmitter products
@@ -110,7 +109,7 @@ const uint8_t  SoftwareRevision = 14; //0 to 255
 // Product model. WSPR-TX Pico                            =1028
 // Product model. WSPR-TX_LP1 with Mezzanine BLP4 card    =1029
 
-const uint16_t Product_Model                             = 1028;
+const uint16_t Product_Model                             = 1012;
 
 
 #include <EEPROM.h>
@@ -358,7 +357,11 @@ void setup()
     Serial.println(F("{MIN} No factory data found !"));
     Serial.println(F("{MIN} You need to run factory setup to complete the configuration, guessing on calibration values for now"));
     FactoryData.HW_Version = 1;  // Hardware version
-    FactoryData.RefFreq = 25999980;//Reference Oscillator frequency
+    // JJ1BDX: why this frequency is changed from V1.11?
+    // Uses the old frequency here
+    FactoryData.RefFreq = 24999980;//Reference Oscillator frequency
+    // Comments out the new frequency just in case
+    // FactoryData.RefFreq = 25999980;//Reference Oscillator frequency
     if (Product_Model == 1011) //LP1 Model, set some defaults
     {
       FactoryData.HW_Revision = 17; // Hardware revision
@@ -374,11 +377,13 @@ void setup()
 
 
             //80To10
+	/*
             FactoryData.LP_A_BandNum = 10;//Low Pass filter A is 10m (+17m + 15m and 12m)
             FactoryData.LP_B_BandNum = 3; //Low Pass filter B is 80m
             FactoryData.LP_C_BandNum = 4; //Low Pass filter C is 40m
             FactoryData.LP_D_BandNum = 6; //Low Pass filter D is 20m (+30m)
        
+	*/
 
        /*
             //80To10
@@ -393,11 +398,15 @@ void setup()
             FactoryData.LP_C_BandNum = 99; //Low Pass filter C is open circuit
             FactoryData.LP_D_BandNum = 99; //Low Pass filter D is open circuit
    
+	*/
+
             //MidPlus
             FactoryData.LP_A_BandNum = 2; //Low Pass filter A is 160m
             FactoryData.LP_B_BandNum = 3; //Low Pass filter B is 80m
             FactoryData.LP_C_BandNum = 4; //Low Pass filter C is 40m
             FactoryData.LP_D_BandNum = 6; //Low Pass filter D is 20m (+30m)
+
+	/*
 
             //HighPlus
             FactoryData.LP_A_BandNum = 7;  //Low Pass filter A is 17m
