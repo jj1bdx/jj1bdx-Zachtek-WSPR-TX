@@ -102,14 +102,21 @@ struct S_WSPRData {
   uint8_t TimeSlotCode; // Determine on what time slot a tranmsission will be
                         // made. If TimeslotCode is 0 to 4 a ten minute
                         // scheduled transmission will be used.
-  // 0=TX om minute 0,10,20.. 1=TX on minute 2,12,22..  ..4=TX om minute
-  // 08,18,28 etc. If Timeslotcode is 5 to 14 a twenty minute schedule code will
-  // be used. 5=TX on minute 0,20,40.  6=TX on minute 2,22,42.  ..14=TX on
-  // minute 18,38,58. if the TimeslotCode is 15 a special band coordinated
-  // schedule is used. If the TimeslotCode is 16 then no schedule is used, e.g
-  // transmission can occur at any time If the TimeslotCode is 17 then
+  // 0=TX om minute 0,10,20..
+  // 1=TX on minute 2,12,22..
+  // ..4=TX om minute 08,18,28 etc.
+  // If Timeslotcode is 5 to 14 a twenty minute schedule code will be used.
+  // 5=TX on minute 0,20,40.
+  // 6=TX on minute 2,22,42.
+  // ..14=TX on minute 18,38,58.
+
+  // If the TimeslotCode is 15 a special band coordinated
+  // schedule is used.
+  // If the TimeslotCode is 16 then no schedule is used, e.g
+  // transmission can occur at any time.
+  // If the TimeslotCode is 17 then
   // transmisson will only occur if GPS derived Maidenhead position has been
-  // updated since last transmission. E.g it becomes a tracker that only
+  // updated since last transmission, e.g it becomes a tracker that only
   // transmits position updates.
 };
 
@@ -172,8 +179,8 @@ struct S_FactoryData {
 
 #define WSPR_SYMBOL_COUNT 162
 
-#define WSPR_FREQ6m                                                            \
-  5029450000ULL // 6m     50.294,500MHz //Slightly lower output power
+// Slightly lower output power on the 6m
+#define WSPR_FREQ6m 5029450000ULL  // 6m     50.294,500MHz
 #define WSPR_FREQ10m 2812610000ULL // 10m    28.126,100MHz
 #define WSPR_FREQ12m 2492610000ULL // 12m    24.926,100MHz
 #define WSPR_FREQ15m 2109610000ULL // 15m    21.096.100MHz
