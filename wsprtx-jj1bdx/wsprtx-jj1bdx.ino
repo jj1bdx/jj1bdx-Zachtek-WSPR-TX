@@ -172,15 +172,6 @@ struct S_FactoryData {
 
 #define WSPR_SYMBOL_COUNT 162
 
-#define WSPR_FREQ23cm                                                          \
-  129650150000ULL // 23cm 1296.501,500MHz (Overtone, not implemented)
-#define WSPR_FREQ70cm                                                          \
-  43230150000ULL // 70cm  432.301,500MHz (Overtone, not implemented)
-#define WSPR_FREQ2m                                                            \
-  14449500000ULL // 2m    144.490,000MHz //Not working. No decode in bench test
-                 // with WSJT-X decoding Software
-#define WSPR_FREQ4m                                                            \
-  7009250000ULL // 4m     70.092,500MHz //Slightly lower output power
 #define WSPR_FREQ6m                                                            \
   5029450000ULL // 6m     50.294,500MHz //Slightly lower output power
 #define WSPR_FREQ10m 2812610000ULL // 10m    28.126,100MHz
@@ -1964,8 +1955,6 @@ void NextFreq(void) {
     case 11:
       freq = WSPR_FREQ6m;
       break;
-    case 12:
-      freq = WSPR_FREQ4m;
     }
     Serial.print("{TBN} "); // Send API update to inform what band we are using
                             // at the moment
@@ -2227,12 +2216,6 @@ void DriveLPFilters() {
 uint8_t FreqToBand() {
   uint8_t BandReturn = 15;
 
-  if (freq < (WSPR_FREQ70cm * 1.2))
-    BandReturn = 14;
-  if (freq < (WSPR_FREQ2m * 1.2))
-    BandReturn = 13;
-  if (freq < (WSPR_FREQ4m * 1.2))
-    BandReturn = 12;
   if (freq < (WSPR_FREQ6m * 1.2))
     BandReturn = 11;
   if (freq < (WSPR_FREQ10m * 1.2))
