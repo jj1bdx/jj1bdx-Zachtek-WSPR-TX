@@ -104,7 +104,7 @@ struct S_WSPRData {
                        // termination
   E_PowerOption PowerOption; // If transmitted Power is based on TXPowerdBm
                              // field or is calculated from GPS Altitude.
-  uint8_t TXPowerdBm;   // Power data in dBm min=0 max=60
+  uint8_t TXPowerdBm;        // Power data in dBm min=0 max=60
   uint8_t TimeSlotCode; // Determine on what time slot a tranmsission will be
                         // made. If TimeslotCode is 0 to 4 a ten minute
                         // scheduled transmission will be used.
@@ -124,10 +124,10 @@ struct S_GadgetData {
   E_Mode StartMode;    // What mode the Gadget should go to after boot.
   S_WSPRData WSPRData; // Data needed to transmit a WSPR packet.
   bool TXOnBand[16];   // Arraycount corresponds to the Enum E_Band, True
-                     // =Transmitt Enabled, False = Transmitt disabled on this
-                     // band
-  unsigned long TXPause; // Number of seconds to pause after having transmitted
-                         // on all enabled bands.
+                       // =Transmitt Enabled, False = Transmitt disabled on this
+                       // band
+  unsigned long TXPause;  // Number of seconds to pause after having transmitted
+                          // on all enabled bands.
   uint64_t GeneratorFreq; // Frequency for when in signal Generator mode. Freq
                           // in centiHertz.
 };
@@ -249,19 +249,6 @@ char callsign[7];
 char locator[5];
 uint8_t power;
 
-// GeoFence grids by Matt Downs - 2E1GYP and Harry Zachrisson - SM7PNV , save
-// some RAM by putting the string in program memmory
-const char NoTXGrids[] PROGMEM = {
-    "IO78 IO88 IO77 IO87 IO76 IO86 IO75 IO85 IO84 IO94 IO83 IO93 IO82 IO92 "
-    "JO02 IO81 IO91 JO01 IO70 IO80 IO90 IO64 PN31 PN41 PN20 PN30 PN40 PM29 "
-    "PM39 PM28 PM38 LK16 LK15 LK14 LK13 LK23 LK24 LK25 LK26 LK36 LK35 LK34 "
-    "LK33 LK44 LK45 LK46 LK47 LK48 LK58 LK57 LK56 LK55"}; // Airborne
-                                                          // transmissions of
-                                                          // this sort are not
-                                                          // legal over the UK,
-                                                          // North Korea, or
-                                                          // Yemen.
-
 uint8_t Si5351I2CAddress; // The I2C address on the Si5351 as detected on
                           // startup
 uint8_t CurrentBand =
@@ -279,10 +266,10 @@ uint8_t tx_buffer[WSPR_SYMBOL_COUNT];
 
 uint64_t freq; // Holds the Output frequency when we are in signal generator
                // mode or in WSPR mode
-int GPSH;     // GPS Hours
-int GPSM;     // GPS Minutes
-int GPSS;     // GPS Seconds
-int fixstate; // GPS Fix state-machine. 0=Init, 1=wating for fix,2=fix accuired
+int GPSH;      // GPS Hours
+int GPSM;      // GPS Minutes
+int GPSS;      // GPS Seconds
+int fixstate;  // GPS Fix state-machine. 0=Init, 1=wating for fix,2=fix accuired
 boolean PCConnected;
 uint16_t LoopGPSNoReceiveCount; // If GPS stops working while in ídle mode this
                                 // will increment
@@ -410,7 +397,7 @@ void setup() {
     GadgetData.WSPRData.MaidenHead6[6] =
         0; // make sure Maidenhead locator is null terminated in case of
            // incomplete data saved
-  } else // No user data was found in EEPROM, set some defaults
+  } else   // No user data was found in EEPROM, set some defaults
   {
 
     CurrentMode = SignalGen;
@@ -1417,16 +1404,8 @@ void DoWSPR() {
                                      // GadgetData.WSPRData.TimeSlotCode value
                                      // will influense the behaviour
             {
-              if ((PCConnected) || (Product_Model != 1028) ||
-                  ((Product_Model == 1028) &&
-                   OutsideGeoFence())) // On the WSPR-TX Pico make sure were are
-                                       // outside the territory of UK, Yemen and
-                                       // North Korea before the transmitter is
-                                       // started but allow tranmissions inside
-                                       // the Geo-Fence if a PC is connected so
-                                       // UK users can make test tranmissions on
-                                       // the ground before relase of Picos
-              {
+              // GeoFence barrier removed
+              if ((PCConnected)) {
                 GPSGoToSleep(); // Put GPS to sleep to save power
                 // -------------------- Altitude coding to Power
                 // ------------------------------------
@@ -1478,8 +1457,8 @@ void DoWSPR() {
                 }
                 StorePosition(); // Save the current position;
                 if (LastFreq())  // If all bands have been transmitted on then
-                                // pause for user defined time and after that
-                                // start over on the first band again
+                                 // pause for user defined time and after that
+                                 // start over on the first band again
                 {
                   if ((GadgetData.TXPause > 60) &&
                       ((Product_Model == 1017) || (Product_Model == 1028)) &&
@@ -1543,7 +1522,7 @@ void DoWSPR() {
           } else {         // Waiting for GPS location fix
             SendSatData(); // Send Satellite postion and SNR information to the
                            // PC GUI while we wait for the GPS location fix
-            LEDBlink(1); // singleblink to indicate waiting for GPS Lock
+            LEDBlink(1);   // singleblink to indicate waiting for GPS Lock
             SendAPIUpdate(UMesNoGPSLock); // Send No lock status
             smartdelay(400);
           }
@@ -2195,7 +2174,7 @@ bool LoadFromEPROM(boolean EEPROMSpace) {
     EEPROM.get(Start, FactoryData); // Load all the data from EEPROM
     CalculatedCRC = GetEEPROM_CRC(FactorySpace); // Calculate the CRC of the
                                                  // data
-  } else // User data
+  } else                                         // User data
   {
     Start = 0;
     Length = sizeof(GadgetData);
@@ -2723,103 +2702,6 @@ void Si5351PowerOn() {
     si5351aOutputOff(SI_CLK0_CONTROL);
   }
 }
-/*
-  //Sleep code from Kevin Darrah https://www.youtube.com/watch?v=urLSDi7SD8M
-  void MCUGoToSleep( int SleepTime)//Sleep time in seconds, accurate to the
-  nearest 8 seconds
-  {
-  int SleepLoop;
-  SleepLoop = SleepTime / 8.8 ; // every sleep period is 8.8 seconds
-  GPSSerial.end();//Must turn off software serialport or sleep will not work
-  //Serial.end(); //Turn off Hardware serial port as well as we will temporary
-  change all ports to outputs AllIOtoLow ();  //Set all IO pins to outputs to
-  save power DisableADC ();  //Turn off ADC to save power
-
-  //SETUP WATCHDOG TIMER
-  WDTCSR = (24);//change enable and WDE - also resets
-  WDTCSR = (33);//prescalers only - get rid of the WDE and WDCE bit
-  WDTCSR |= (1 << 6); //enable interrupt mode
-
-  //ENABLE SLEEP - this enables the sleep mode
-  SMCR |= (1 << 2); //power down mode
-  SMCR |= 1;//enable sleep
-  for (int i = 0; i < SleepLoop; i++)//sleep for eight second intervals untill
-  SleepTime is reached
-  {
-    //BOD DISABLE - this must be called right before the __asm__ sleep
-  instruction MCUCR |= (3 << 5); //set both BODS and BODSE at the same time
-    MCUCR = (MCUCR & ~(1 << 5)) | (1 << 6); //then set the BODS bit and clear
-  the BODSE bit at the same time
-    __asm__  __volatile__("sleep");//in line assembler to go to sleep
-    //Just woke upp after 8 seconds of sleep, do a short blink to indicate that
-  I'm still running digitalWrite(StatusLED, HIGH); delay (30);
-    digitalWrite(StatusLED, LOW);
-  }
-  //Restore everything
-  EnableADC ();
-  GPSSerial.begin(9600); //Init software serial port to communicate with the
-  on-board GPS module
-  }
-
-  //Sleep code from Kevin Darrah https://www.youtube.com/watch?v=urLSDi7SD8M
-  void AllIOtoLow ()
-  {
-  //  Save Power by setting all IO pins to outputs and setting them either low
-  or high
-  // (for some odd reason the ATMEga328 takes less power when this is done
-  instead of having IO pins as inputs during sleep, see more in Kevin Darrahs
-  YouTube Videos) pinMode(A0, OUTPUT); digitalWrite(A0, LOW);
-
-  pinMode(A6, OUTPUT);
-  digitalWrite(A6, LOW);
-
-  pinMode(A7, OUTPUT);
-  digitalWrite(A7, LOW);
-
-  pinMode(10, OUTPUT);
-  digitalWrite(10, LOW);
-
-  pinMode(11, OUTPUT);
-  digitalWrite(11, LOW);
-
-  pinMode(12, OUTPUT);
-  digitalWrite(12, LOW);
-
-  pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
-
-  pinMode(4, OUTPUT);
-  digitalWrite(4, LOW);
-
-  pinMode(5, OUTPUT);
-  digitalWrite(5, LOW);
-
-  pinMode(6, OUTPUT);
-  digitalWrite(6, LOW);
-
-  pinMode(7, OUTPUT);
-  digitalWrite(7, LOW);
-
-  pinMode(8, OUTPUT);
-  digitalWrite(8, LOW);
-
-  pinMode(9, OUTPUT);
-  digitalWrite(9, LOW);
-
-  }
-
-  void DisableADC ()
-  {
-  //Disable ADC - don't forget to flip back after waking up if using ADC in your
-  application ADCSRA |= (1 << 7); ADCSRA &= ~(1 << 7);
-  }
-
-  void EnableADC ()
-  {
-  //Enable ADC again
-  ADCSRA |= (1 << 7);
-  }
-*/
 
 void SerialPrintZero() { Serial.print("0"); }
 
@@ -2855,35 +2737,6 @@ void SendSatData() {
   }
   Serial.println();
 } // displaySatellitesInView
-
-/*
-  //Sleep code from Kevin Darrah https://www.youtube.com/watch?v=urLSDi7SD8M
-  ISR(WDT_vect) {
-  //DON'T FORGET THIS!  Needed for the watch dog timer.  This is called after a
-  watch dog timer timeout - this is the interrupt function called after waking
-  up
-  }// watchdog interrupt
-
-
-*/
-// Original WSPR code by NT7S - Jason Milldrum
-// https://github.com/etherkit/JTEncode and Bo Hansen - OZ2M RFZero
-// https://rfzero.net Modifed for Type2 and Type3 messages by SM7PNV Harry
-// Zachrisson https://github.com/HarrydeBug
-
-/*
-   wspr_encode(const char * call, const char * loc, const uint8_t dbm, uint8_t *
-   symbols)
-
-   Takes an arbitrary message of up to 13 allowable characters and returns
-
-   call - Callsign (6 characters maximum).
-   loc - Maidenhead grid locator (4 charcters maximum).
-   dbm - Output power in dBm.
-   symbols - Array of channel symbols to transmit retunred by the method.
-   Ensure that you pass a uint8_t array of size WSPR_SYMBOL_COUNT to the method.
-
-*/
 
 // Converts a letter (A-Z) or digit (0-9)to a special format used in the
 // encoding of WSPR messages
@@ -3180,34 +3033,6 @@ uint8_t wspr_code(char c) {
   }
 }
 
-// GeoFence, do not transmit over Yemen, North Korea and the UK
-// GeoFence code by Matt Downs - 2E1GYP and Harry Zachrisson - SM7PNV
-// Defined by the NoTXGrids that holds all the Maidehead grids for these
-// locations
-boolean OutsideGeoFence() {
-  char TestGrid[4];
-  boolean Outside;
-
-  Outside = true;
-  for (int GridLoop = 0; GridLoop < strlen_P(NoTXGrids);
-       GridLoop = GridLoop + 5) { // Itterate between Geo-Fenced grids
-    for (int CharLoop = 0; CharLoop < 4; CharLoop++) {
-      TestGrid[CharLoop] = pgm_read_byte_near(
-          NoTXGrids + CharLoop +
-          GridLoop); // Copy a Grid string from program memory to RAM variable.
-    }
-    if ((GadgetData.WSPRData.MaidenHead4[0] == TestGrid[0]) &&
-        (GadgetData.WSPRData.MaidenHead4[1] == TestGrid[1]) &&
-        (GadgetData.WSPRData.MaidenHead4[2] == TestGrid[2]) &&
-        (GadgetData.WSPRData.MaidenHead4[3] == TestGrid[3])) {
-      Outside = false; // We found a match between the current location and a
-                       // Geo-Fenced Grid
-    }
-  }
-
-  return Outside;
-}
-
 // Type 3 call sign hash by RFZero www.rfzero.net modified by SM7PNV
 uint32_t WSPRCallHash(const char *call) {
 #define rot(x, k) ((x << k) | (x >> (32 - k)))
@@ -3411,7 +3236,7 @@ boolean CorrectTimeslot() {
            (SlotCode *
             2)); // if the TimeSlotcode multiplied with 2 (only even minutes) is
                  // matching the current minute digit then transmit
-    } // else if
+    }            // else if
   }
   return CorrectSlot;
 }
