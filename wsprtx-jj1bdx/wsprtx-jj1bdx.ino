@@ -40,13 +40,7 @@
 const uint8_t SoftwareVersion = 1;   // 0 to 255. 0=Beta
 const uint8_t SoftwareRevision = 14; // 0 to 255
 
-// Product model. WSPR-TX_LP1                             =1011
 // Product model. WSPR-TX Desktop                         =1012
-// Product model. WSPR-TX Mini                            =1017
-// Product model. WSPR-TX_LP1 with Mezzanine LP4 card     =1020
-// Product model. SSG                                     =1024
-// Product model. WSPR-TX Pico                            =1028
-// Product model. WSPR-TX_LP1 with Mezzanine BLP4 card    =1029
 
 const uint16_t Product_Model = 1012;
 
@@ -311,14 +305,6 @@ void setup() {
     FactoryData.RefFreq = 24999980; // Reference Oscillator frequency
     // Comments out the new frequency just in case
     // FactoryData.RefFreq = 25999980;//Reference Oscillator frequency
-    if (Product_Model == 1011) // LP1 Model, set some defaults
-    {
-      FactoryData.HW_Revision = 17;  // Hardware revision
-      FactoryData.LP_A_BandNum = 98; // Low Pass filter A is Link
-      FactoryData.LP_B_BandNum = 99; // Low Pass filter B is Nothing
-      FactoryData.LP_C_BandNum = 99; // Low Pass filter C is Nothing
-      FactoryData.LP_D_BandNum = 99; // Low Pass filter D is Nothing
-    }
 
     if (Product_Model == 1012) // Desktop Model, set default version
     {
@@ -363,24 +349,6 @@ void setup() {
           FactoryData.LP_D_BandNum = 99; //Low Pass filter D is open circuit
 
      */
-    }
-    if (Product_Model == 1029) // LP1 Model with Mezzanine BLP4 addon, set
-                               // default LP as a MidPlus version
-    {
-      FactoryData.HW_Revision = 17; // Hardware revision
-      FactoryData.LP_A_BandNum = 2; // Low Pass filter A is 160m
-      FactoryData.LP_B_BandNum = 3; // Low Pass filter B is 80m
-      FactoryData.LP_C_BandNum = 4; // Low Pass filter C is 40m
-      FactoryData.LP_D_BandNum = 6; // Low Pass filter D is 20m
-    }
-
-    if (Product_Model == 1028) // Pico Model, set default LP to 20m
-    {
-      FactoryData.HW_Revision = 5;   // Hardware revision
-      FactoryData.LP_A_BandNum = 6;  // Low Pass filter A is 20m
-      FactoryData.LP_B_BandNum = 99; // Low Pass filter B is open circuit
-      FactoryData.LP_C_BandNum = 99; // Low Pass filter C is open circuit
-      FactoryData.LP_D_BandNum = 99; // Low Pass filter D is open circuit
     }
   }
 
@@ -443,21 +411,6 @@ void setup() {
     GadgetData.WSPRData.Prefix[2] = ' ';
     GadgetData.WSPRData.Prefix[3] = 0; // Null termination
     GadgetData.WSPRData.Sufix = 1;
-    if (Product_Model == 1017) // The WSPR mini
-    {
-      GadgetData.WSPRData.TXPowerdBm = 13; // WSPR Mini has 20mW output power
-    }
-    if (Product_Model == 1028) // The WSPR Pico
-    {
-      GadgetData.WSPRData.TXPowerdBm = 10; // WSPR Pico has 10mW output power
-      GadgetData.WSPRData.CallSign[5] =
-          'B'; // Set other than default Callsign so it will start WSPR
-               // automatically even if not configured, helps in the testing of
-               // new devices
-      GadgetData.WSPRData.LocationPrecision =
-          6; // Use six letter Maidnhead postion reports by transmitting Type3
-             // messages
-    }
     for (int i = 0; i < 16; i++) {
       GadgetData.TXOnBand[i] = false; // Disable TX on all bands.
     }
@@ -472,15 +425,6 @@ void setup() {
   // some model use a different pinout and vill owerride this value below
   StatusLED = 4;
   switch (Product_Model) {
-  case 1011:
-    Serial.println(F("{MIN} ZachTek WSPR-TX_LP1 transmitter"));
-    // De-energize any relays connected to option port
-    pinMode(Relay2, OUTPUT);
-    pinMode(Relay3, OUTPUT);
-    digitalWrite(Relay2, LOW);
-    digitalWrite(Relay3, LOW);
-    break;
-
   case 1012:
     Serial.println(F("{MIN} ZachTek WSPR Desktop transmitter"));
     if ((FactoryData.HW_Version == 1) &
@@ -500,54 +444,6 @@ void setup() {
       digitalWrite(Relay2, LOW);
       digitalWrite(Relay3, LOW);
     }
-    break;
-
-  case 1024:
-    Serial.println(F("{MIN} ZachTek Super Simple Signal Generator"));
-    StatusLED = 10; // Status LED
-    pinMode(SiPower, OUTPUT);
-    digitalWrite(SiPower, LOW); // Turn on power to the Si5351
-    break;
-
-  case 1017:
-    Serial.println(F("{MIN} ZachTek WSPR Mini transmitter"));
-    StatusLED = A2; // Status LED uses a different output on the Mini
-    pinMode(SiPower, OUTPUT);
-    digitalWrite(SiPower, LOW); // Turn on power to the Si5351
-    break;
-
-  case 1020:
-    Serial.println(
-        F("{MIN} ZachTek WSPR-TX_LP1 transmitter with Mezzanine LP4 board"));
-    // De-energize all relays
-    pinMode(Relay2, OUTPUT);
-    pinMode(Relay3, OUTPUT);
-    digitalWrite(Relay2, LOW);
-    digitalWrite(Relay3, LOW);
-    break;
-
-  case 1028:
-    Serial.println(F("{MIN} ZachTek WSPR Pico transmitter"));
-    StatusLED = A2; // Status LED uses a different output on the Pico
-    // The Pico is assumed to never be used as a stationary transmitter,
-    // it will most likely fly in a ballon beacon so set some settings to avoid
-    // a user releasing a ballon with a missconfigured beacon
-    GadgetData.WSPRData.LocatorOption =
-        GPS; // Always set the Locator option to GPS calculated as a failsafe
-    GadgetData.WSPRData.PowerOption =
-        Altitude; // Always encode Altitude in the power field as a failsafe
-    CurrentMode =
-        WSPRBeacon; // Always boot the WSPR Pico in to beacon mode as a failsafe
-    break;
-
-  case 1029:
-    Serial.println(
-        F("{MIN} ZachTek WSPR-TX_LP1 transmitter with Mezzanine BLP4 board"));
-    // De-energize all relays
-    pinMode(Relay2, OUTPUT);
-    pinMode(Relay3, OUTPUT);
-    digitalWrite(Relay2, LOW);
-    digitalWrite(Relay3, LOW);
     break;
   }
 
@@ -634,7 +530,6 @@ void loop() {
   {
     LoopGPSNoReceiveCount = 0;
     Serial.println(F("{MIN} Resetting GPS"));
-    GPSWakeUp(); // Try to get GPS going again by sending wake up command
     smartdelay(2000);
   }
 }
@@ -1406,7 +1301,6 @@ void DoWSPR() {
             {
               // GeoFence barrier removed
               if ((PCConnected)) {
-                GPSGoToSleep(); // Put GPS to sleep to save power
                 // -------------------- Altitude coding to Power
                 // ------------------------------------
                 if (GadgetData.WSPRData.PowerOption ==
@@ -1491,7 +1385,6 @@ void DoWSPR() {
                                                   // enabled WSPR band and will
                                                   // start over
                 }
-                GPSWakeUp();
                 NextFreq(); // get the frequency for the next HAM band that we
                             // will transmit on
                 // Use fixed offset
@@ -2325,111 +2218,35 @@ void LEDBlink(int Blinks) {
 
 // Pulls the correct relays to choose LP filter A,B,C or D
 void DriveLPFilters() {
-  if ((Product_Model == 1017) || (Product_Model == 1028)) {
-    // If its the WSPR-TX Mini or Pico then do nothing as they dont have any
-    // relays
-  } else {
-    SendAPIUpdate(UMesLPF);
-    // Product model 1011 E.g WSPR-TX LP1, this will drive the relays on the
-    // optional Mezzanine LP4 and Mezzanine BLP4 cards
-    if ((Product_Model == 1011) || (Product_Model == 1020) ||
-        (Product_Model == 1029)) {
-      switch (CurrentLP) {
-      case LP_A:
-        // all relays are at rest
-        digitalWrite(Relay2, LOW);
-        digitalWrite(Relay3, LOW);
-        break;
+  SendAPIUpdate(UMesLPF);
 
-      case LP_B:
-        digitalWrite(Relay2, HIGH);
-        digitalWrite(Relay3, LOW);
-        break;
+  // Not Product Model 1011 and not Hardvare version 1.4 E.g later model
+  // of the Desktop transmitter
+  switch (CurrentLP) {
+  case LP_A:
+    // all relays are at rest
+    digitalWrite(Relay1, LOW);
+    digitalWrite(Relay2, LOW);
+    digitalWrite(Relay3, LOW);
+    break;
 
-      case LP_C:
-        digitalWrite(Relay2, LOW);
-        digitalWrite(Relay3, HIGH);
-        break;
+  case LP_B:
+    digitalWrite(Relay1, HIGH);
+    digitalWrite(Relay2, LOW);
+    digitalWrite(Relay3, LOW);
+    break;
 
-      case LP_D:
-        digitalWrite(Relay2, HIGH);
-        digitalWrite(Relay3, HIGH);
-        break;
+  case LP_C:
+    digitalWrite(Relay1, LOW);
+    digitalWrite(Relay2, LOW);
+    digitalWrite(Relay3, HIGH);
+    break;
 
-      } // Case
-    }   // If Product_Model == 1011
-    else {
-      // is not Product Model 1011 and is Hardware version 1.4 E.g en early
-      // model of the Desktop transmitter
-      if ((FactoryData.HW_Version == 1) &&
-          (FactoryData.HW_Revision ==
-           4)) // Early Hardware has different relay driving
-      {
-        switch (CurrentLP) {
-        case LP_A:
-          // all relays are at rest
-          pinMode(Relay1, INPUT); // Set Relay1 as Input to deactivate the relay
-          pinMode(Relay2, INPUT); // Set Relay2 as Input to deactivate the relay
-          pinMode(Relay3, INPUT); // Set Relay3 as Input to deactivate the relay
-          break;
-
-        case LP_B:
-          pinMode(Relay1,
-                  OUTPUT); // Set Relay1 as Output so it can be pulled low
-          digitalWrite(Relay1, LOW);
-          pinMode(Relay2, INPUT); // Set Relay2 as Input to deactivate the relay
-          pinMode(Relay3, INPUT); // Set Relay3 as Input to deactivate the relay
-          break;
-
-        case LP_C:
-          pinMode(Relay1, INPUT); // Set Relay1 as Input to deactivate the relay
-          pinMode(Relay2, INPUT); // Set Relay2 as Input to deactivate the relay
-          pinMode(Relay3,
-                  OUTPUT); // Set Relay3 as Output so it can be pulled low
-          digitalWrite(Relay3, LOW);
-          break;
-
-        case LP_D:
-          pinMode(Relay1, INPUT); // Set Relay1 as Input to deactivate the relay
-          pinMode(Relay2,
-                  OUTPUT); // Set Relay2 as Output so it can be pulled low
-          digitalWrite(Relay2, LOW);
-          pinMode(Relay3,
-                  OUTPUT); // Set Relay3 as Output so it can be pulled low
-          digitalWrite(Relay3, LOW);
-          break;
-        }
-      } else {
-        // Not Product Model 1011 and not Hardvare version 1.4 E.g later model
-        // of the Desktop transmitter
-        switch (CurrentLP) {
-        case LP_A:
-          // all relays are at rest
-          digitalWrite(Relay1, LOW);
-          digitalWrite(Relay2, LOW);
-          digitalWrite(Relay3, LOW);
-          break;
-
-        case LP_B:
-          digitalWrite(Relay1, HIGH);
-          digitalWrite(Relay2, LOW);
-          digitalWrite(Relay3, LOW);
-          break;
-
-        case LP_C:
-          digitalWrite(Relay1, LOW);
-          digitalWrite(Relay2, LOW);
-          digitalWrite(Relay3, HIGH);
-          break;
-
-        case LP_D:
-          digitalWrite(Relay1, LOW);
-          digitalWrite(Relay2, HIGH);
-          digitalWrite(Relay3, HIGH);
-          break;
-        }
-      }
-    }
+  case LP_D:
+    digitalWrite(Relay1, LOW);
+    digitalWrite(Relay2, HIGH);
+    digitalWrite(Relay3, HIGH);
+    break;
   }
 }
 
@@ -2622,59 +2439,11 @@ int GetVCC() {
   return result;              // Vcc in millivolts
 }
 
-void PowerSaveOFF() {
-  GPSWakeUp();
-  Si5351PowerOn();
-}
+void PowerSaveOFF() { Si5351PowerOn(); }
 
-void PowerSaveON() {
-  GPSGoToSleep();
-  Si5351PowerOff();
-}
-
-void GPSGoToSleep() {
-  switch (Product_Model) {
-  case 1017: // Mini
-    // If its the WSPR-TX Mini, send the Sleep string to it
-    GPSSerial.println(F("$PMTK161,0*28"));
-    // GPSSleep = true;
-    break;
-
-  case 1028: // Pico
-    // If it is the WSPR-TX Pico it has a hardware line for sleep/wake
-    pinMode(GPSPower, OUTPUT);
-    digitalWrite(GPSPower, LOW);
-    break;
-  }
-}
-
-void GPSWakeUp() {
-  switch (Product_Model) {
-  case 1017: // Mini
-    // Send anything on the GPS serial line to wake it up
-    GPSSerial.println(" ");
-    // GPSSleep = false;
-    delay(100); // Give the GPS some time to wake up and send its serial data
-                // back to us
-    break;
-
-  case 1028: // Pico
-    // If it is the WSPR-TX Pico it has a hardware line for sleep/wake
-    pinMode(GPSPower, OUTPUT);
-    digitalWrite(GPSPower, HIGH);
-    delay(200);
-    pinMode(GPSPower, INPUT);
-    delay(200);
-    // Send GPS reset string
-    // GPSSerial.println(F("$PCAS10,3*1F"));
-    // Airborne Mode
-    // GPSSerial.println(F("$PCAS11,5*18"));
-    break;
-  }
-}
+void PowerSaveON() { Si5351PowerOff(); }
 
 void GPSReset() {
-  GPSWakeUp();
   // Send GPS reset string
   GPSSerial.println(F("$PCAS10,3*1F"));
 }
