@@ -462,7 +462,6 @@ void setup() {
   // Blink StatusLED to indicate Reboot
   LEDBlink(16);
   random(RandomSeed());
-  PowerSaveOFF();
 
   DetectSi5351I2CAddress();
 
@@ -1079,9 +1078,8 @@ void DecodeSerialCMD(const char *InputCMD) {
           // Pico and the LP1 with Mezzanine BLP4 regardless of hardware version
           // The PC will indicate these bands with the little green square in
           // the GUI
-          if (((Product_Model == 1012) & (FactoryData.HW_Version == 1) &
-               (FactoryData.HW_Revision > 9)) ||
-              (Product_Model == 1028) || (Product_Model == 1029)) {
+          if ((Product_Model == 1012) & (FactoryData.HW_Version == 1) &
+              (FactoryData.HW_Revision > 9)) {
             // If 10m LP filter is fitted then indicate it can do 15m and 12m as
             // well
             if ((FactoryData.LP_A_BandNum == 10) ||
@@ -1210,7 +1208,6 @@ void DoSignalGen() {
 }
 
 void DoIdle() {
-  PowerSaveOFF();
   CurrentMode = Idle;
   digitalWrite(StatusLED, LOW);
   si5351aOutputOff(SI_CLK0_CONTROL);
@@ -1354,31 +1351,6 @@ void DoWSPR() {
                                  // pause for user defined time and after that
                                  // start over on the first band again
                 {
-                  if ((GadgetData.TXPause > 60) &&
-                      ((Product_Model == 1017) || (Product_Model == 1028)) &&
-                      (!PCConnected)) // If the PC is not connected and the
-                                      // TXdelay is longer than a 60 sec then
-                                      // put the MCU to sleep to save current
-                                      // during this long pause (Mini and Pico
-                                      // models only)
-                  {
-                    delay(600); // Let the serial port send data from its buffer
-                                // before we go to sleep
-                    Si5351PowerOff(); // Turn off the PLL to save power (Mini
-                                      // Only)
-                    // MCUGoToSleep (GadgetData.TXPause - 10);        //Set MCU
-                    // in sleep mode until there is 10 seconds left of delay
-                    PowerSaveOFF(); // We are back from sleep - turn on GPS and
-                                    // PLL again
-                    smartdelay(2000); // let the smartdelay routine read a few
-                                      // GPS lines so we can get the new GPS
-                                      // time after our sleep
-                  } else { // Regular pause if we did not go to sleep then do a
-                           // regular pause and send updates to the GUI for the
-                           // duration
-                    smartdelay(GadgetData.TXPause *
-                               1000UL); // Pause for the time set by the user
-                  }
                   SendAPIUpdate(
                       UMesWSPRBandCycleComplete); // Inform PC that we have
                                                   // transmitted on the last
@@ -2439,37 +2411,9 @@ int GetVCC() {
   return result;              // Vcc in millivolts
 }
 
-void PowerSaveOFF() { Si5351PowerOn(); }
-
-void PowerSaveON() { Si5351PowerOff(); }
-
 void GPSReset() {
   // Send GPS reset string
   GPSSerial.println(F("$PCAS10,3*1F"));
-}
-
-void Si5351PowerOff() {
-  if (Product_Model == 1017 ||
-      Product_Model == 1028) // If its the WSPR-TX Mini it has a control line
-                             // that can cut power to the Si5351
-  {
-    // Power off the Si5351
-    digitalWrite(SiPower, HIGH);
-  }
-}
-
-void Si5351PowerOn() {
-  if (Product_Model == 1017) // If its the WSPR-TX Mini it has a control line
-                             // that can cut power to the Si5351
-  {
-    // Power on the Si5351
-    digitalWrite(SiPower, LOW);
-    // Give it some time to stabilize voltage before init
-    delay(100);
-    // re-initialize the Si5351
-    i2cInit();
-    si5351aOutputOff(SI_CLK0_CONTROL);
-  }
 }
 
 void SerialPrintZero() { Serial.print("0"); }
