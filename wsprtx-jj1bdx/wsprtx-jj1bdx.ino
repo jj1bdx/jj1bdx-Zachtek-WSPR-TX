@@ -456,6 +456,7 @@ void setup() {
   Serial.println(SoftwareRevision);
 
   Serial.println(F("{MIN} Modified by JJ1BDX"));
+  Serial.println(F("{MIN} Reduced version for WSPR Desktop TX"));
 
   // Blink StatusLED to indicate Reboot
   LEDBlink(16);
